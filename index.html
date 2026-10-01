@@ -7106,17 +7106,46 @@ table.hm-table-layout td.heat-5 {
 }
 
 
-/* Modal por encima del botón de acciones */
+/* Modal por encima de todo */
 .modal {
   z-index: 15000 !important;
 }
+/* Acciones por encima de la tabla sticky (thead ~1002), bajo el modal */
 .actions-menu-wrapper {
-  z-index: 40 !important;
+  position: relative !important;
+  z-index: 8000 !important;
 }
-/* Mientras haya un modal visible, ocultar botones de acciones flotantes */
+.actions-dropdown {
+  z-index: 8001 !important;
+}
+.actions-menu-wrapper:has(.actions-dropdown.open),
+.actions-menu-wrapper:has(.menu-open) {
+  z-index: 9000 !important;
+}
+/* Mientras haya un modal visible, ocultar botones de acciones */
 body.modal-open .actions-menu-wrapper {
   visibility: hidden !important;
   pointer-events: none !important;
+}
+
+
+.form-actions {
+  position: relative;
+  z-index: 8500;
+}
+.dashboard-section > .form-actions,
+.dashboard-section > div > .form-actions {
+  position: relative;
+  z-index: 8500;
+}
+/* Evitar que el contenedor de la tabla tape el menú de acciones */
+.table-container,
+.summary-table-container {
+  z-index: 1;
+  position: relative;
+}
+.full-risk-table thead {
+  z-index: 2;
 }
 
 </style>
