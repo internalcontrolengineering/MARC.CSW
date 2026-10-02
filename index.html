@@ -7167,6 +7167,59 @@ body.modal-open .actions-menu-wrapper {
   z-index: 2;
 }
 
+
+
+/* Estilo claro fijo: autorización, evento de pérdida, confirmación MARC */
+body.dark-mode #sensitiveAuthModal .modal-content,
+body.dark-mode #lossEventModal .modal-content {
+  background: #ffffff !important; color: #333333 !important;
+}
+body.dark-mode #sensitiveAuthModal .modal-header,
+body.dark-mode #lossEventModal .modal-header {
+  background: linear-gradient(135deg, #0b1426, #102040) !important;
+  color: #ffffff !important;
+}
+body.dark-mode #sensitiveAuthModal .modal-body,
+body.dark-mode #lossEventModal .modal-body,
+body.dark-mode #sensitiveAuthModal .modal-footer,
+body.dark-mode #lossEventModal .modal-footer {
+  background: #ffffff !important; color: #333333 !important;
+}
+body.dark-mode #lossEventModal .modal-footer { background: #f8f9fa !important; }
+body.dark-mode #sensitiveAuthModal .form-control,
+body.dark-mode #lossEventModal .form-control,
+body.dark-mode #sensitiveAuthModal input,
+body.dark-mode #lossEventModal input {
+  background: #ffffff !important; color: #333333 !important; border-color: #ddd !important;
+}
+body.dark-mode #sensitiveAuthModal label,
+body.dark-mode #lossEventModal label { color: #333333 !important; }
+body.dark-mode #sensitiveAuthModal p,
+body.dark-mode #lossEventModal p { color: #555555 !important; }
+body.dark-mode #lossEventModal .readonly-field {
+  background-color: #f8f9fa !important; color: #212529 !important;
+}
+body.dark-mode #lossEventModal #saveLossEventBtn {
+  background-color: #f39c12 !important; color: #ffffff !important;
+}
+body.dark-mode #sensitiveAuthModal .modal-footer .btn-primary {
+  background-color: #2b6cb0 !important; color: #ffffff !important;
+}
+body.dark-mode #marcConfirmOverlay .marc-confirm-card {
+  background: #ffffff !important; color: #0f172a !important;
+}
+body.dark-mode #marcConfirmOverlay .marc-confirm-title { color: #0f172a !important; }
+body.dark-mode #marcConfirmOverlay .marc-confirm-msg { color: #64748b !important; }
+body.dark-mode #marcConfirmOverlay .marc-btn-cancel {
+  background: #f1f5f9 !important; color: #475569 !important;
+}
+body.dark-mode #marcConfirmOverlay .marc-btn-ok {
+  background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important; color: #fff !important;
+}
+body.dark-mode #marcConfirmOverlay .marc-btn-danger {
+  background: linear-gradient(135deg, #b91c1c, #ef4444) !important; color: #fff !important;
+}
+
 </style>
 
 
@@ -10663,18 +10716,26 @@ function marcConfirm(message, options) {
   return new Promise(function (resolve) {
     let overlay = document.getElementById('marcConfirmOverlay');
     if (!overlay) {
-      resolve(window.confirm(message));
-      return;
-    }
-    if (overlay.parentNode !== document.body) {
+      overlay = document.createElement('div');
+      overlay.id = 'marcConfirmOverlay';
+      overlay.innerHTML =
+        '<div class="marc-confirm-card">' +
+          '<div class="marc-confirm-icon" id="marcConfirmIcon" style="display:none"></div>' +
+          '<div class="marc-confirm-title" id="marcConfirmTitle">Confirmar</div>' +
+          '<div class="marc-confirm-msg" id="marcConfirmMsg"></div>' +
+          '<div class="marc-confirm-actions">' +
+            '<button type="button" class="marc-btn-cancel" id="marcConfirmCancel">Cancelar</button>' +
+            '<button type="button" class="marc-btn-ok" id="marcConfirmOk">Aceptar</button>' +
+          '</div>' +
+        '</div>';
       document.body.appendChild(overlay);
     }
+    if (overlay.parentNode !== document.body) document.body.appendChild(overlay);
     const titleEl = document.getElementById('marcConfirmTitle');
     const msgEl = document.getElementById('marcConfirmMsg');
     const iconEl = document.getElementById('marcConfirmIcon');
     const okBtn = document.getElementById('marcConfirmOk');
     const cancelBtn = document.getElementById('marcConfirmCancel');
-
     titleEl.textContent = options.title || 'Confirmar acción';
     msgEl.textContent = String(message || '');
     msgEl.style.whiteSpace = 'pre-wrap';
@@ -10686,27 +10747,33 @@ function marcConfirm(message, options) {
     okBtn.textContent = options.okText || 'Aceptar';
     cancelBtn.textContent = options.cancelText || 'Cancelar';
     okBtn.className = options.danger ? 'marc-btn-danger' : 'marc-btn-ok';
-
     function cleanup(result) {
+      document.removeEventListener('keydown', onKey);
       overlay.classList.remove('show');
       setTimeout(function () { overlay.style.display = 'none'; }, 250);
       okBtn.onclick = null;
       cancelBtn.onclick = null;
       resolve(result);
     }
-
+    function onKey(e) {
+      if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); cleanup(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); cleanup(false); }
+    }
     okBtn.onclick = function () { cleanup(true); };
     cancelBtn.onclick = function () { cleanup(false); };
+    document.addEventListener('keydown', onKey);
     overlay.style.display = 'flex';
     overlay.style.zIndex = '30001';
     overlay.classList.remove('show');
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         overlay.classList.add('show');
+        try { okBtn.focus(); } catch (err) {}
       });
     });
   });
 }
+
 
 function showSessionMessage(kind, name) {
   return new Promise(function (resolve) {
@@ -21295,6 +21362,11 @@ function importFromJson(event) {
             try {
               SESSION_DURATION_MINUTES = mins;
               localStorage.setItem('marc_sessionDurationMinutes', String(mins));
+              try {
+                var _si = document.getElementById('sessionDurationInput');
+                if (_si) _si.value = String(mins);
+                if (typeof updateSessionTimerUI === 'function') updateSessionTimerUI();
+              } catch (e2) {}
               sessionRestored = true;
             } catch (e) {}
           }
@@ -21303,8 +21375,19 @@ function importFromJson(event) {
           try {
             darkModeEnabled = jsonData.darkMode;
             localStorage.setItem('marc_darkMode', String(darkModeEnabled));
-            if (darkModeEnabled) document.body.classList.add('dark-mode');
-            else document.body.classList.remove('dark-mode');
+            if (darkModeEnabled) {
+              document.body.classList.add('dark-mode');
+              try {
+                var _tt = document.getElementById('themeToggle');
+                if (_tt) _tt.innerHTML = '<span>☀️</span> Modo Claro';
+              } catch (e2) {}
+            } else {
+              document.body.classList.remove('dark-mode');
+              try {
+                var _tt2 = document.getElementById('themeToggle');
+                if (_tt2) _tt2.innerHTML = '<span>🌙</span> Modo Oscuro';
+              } catch (e2) {}
+            }
           } catch (e) {}
         }
         try {
@@ -21331,6 +21414,16 @@ function importFromJson(event) {
         try {
           document.querySelectorAll('#riskTableBody tr').forEach(function (row) {
             row.classList.add('show'); row.style.display = 'table-row';
+          });
+        } catch (e) {}
+        try {
+          document.querySelectorAll('#historicalTableBody tr').forEach(function (row) {
+            row.style.display = 'table-row';
+          });
+        } catch (e) {}
+        try {
+          document.querySelectorAll('#lossEventsTableBody tr').forEach(function (row) {
+            row.style.display = 'table-row';
           });
         } catch (e) {}
         alert('✅ IMPORTACIÓN COMPLETADA\n\nModo: ' + (fullRestore ? 'Restauración total' : 'Solo nuevos') +
