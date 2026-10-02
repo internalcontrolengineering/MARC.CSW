@@ -493,29 +493,26 @@
   .full-risk-table td:last-child{
     position:relative;
     padding:0 !important;
-    min-height:0;
-    height:auto !important;
+    min-height:240px;
+    height:240px;
     border:1px solid #e0e0e0 !important;
     vertical-align:top;
   }
 
   .control-division,
   .responsables-division{
-    height:auto !important;
-    min-height:28px;
-    max-height:none !important;
-    padding:6px 8px;
+    height:80px;
+    padding:2px 8px;
     border-bottom:1px solid #e0e0e0 !important;
     display:flex;
-    align-items:flex-start;
-    overflow:visible;
+    align-items:center;
+    overflow:hidden;
     box-sizing:border-box;
     font-size:inherit;
     font-family:inherit;
-    line-height:1.35;
+    line-height:1.1;
     white-space:normal;
     word-wrap:break-word;
-    overflow-wrap:anywhere;
   }
 
   .responsables-division > div > div{
@@ -543,9 +540,9 @@
   .control-division:nth-child(1),
   .control-division:nth-child(2),
   .control-division:nth-child(3){
-    height:auto !important;
-    min-height:28px;
-    max-height:none !important;
+    height:80px;
+    min-height:80px;
+    max-height:80px;
   }
 
   .control-division:nth-child(3),
@@ -598,6 +595,38 @@
     transform:translateY(-2px);
     box-shadow:0 3px 5px rgba(0,0,0,0.2);
   }
+
+  .bulk-actions-toolbar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; margin-top: 6px; flex-wrap: nowrap;
+  }
+  .bulk-tool-btn {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.35);
+    background: rgba(255,255,255,0.12); color: #fff;
+    cursor: pointer; font-size: 0.95rem; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0; transition: background 0.2s, transform 0.15s;
+  }
+  .bulk-tool-btn:hover { background: rgba(255,255,255,0.28); transform: scale(1.08); }
+  .bulk-tool-btn.active {
+    background: #27ae60; border-color: #2ecc71;
+    box-shadow: 0 0 0 2px rgba(46,204,113,0.4);
+  }
+  .bulk-tool-btn.bulk-delete-btn {
+    background: rgba(231,76,60,0.35); border-color: rgba(231,76,60,0.6);
+  }
+  .bulk-tool-btn.bulk-delete-btn:hover { background: #e74c3c; }
+  .bulk-tool-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+  .risk-row-selected > td,
+  .loss-row-selected > td,
+  .hist-row-selected > td { background-color: #fff3cd !important; }
+  .row-select-cb { width: 16px; height: 16px; cursor: pointer; accent-color: #e74c3c; }
+  .row-select-cb-wrap { display: none; align-items: center; justify-content: center; margin-bottom: 6px; }
+  body.bulk-mode-risks #riskTableBody .row-select-cb-wrap,
+  body.bulk-mode-loss #lossEventsTableBody .row-select-cb-wrap,
+  body.bulk-mode-hist #historicalTableBody .row-select-cb-wrap { display: flex !important; }
+
 
   .ejecuta-label,
   .valida-label{
@@ -6555,36 +6584,26 @@ header {
   word-wrap: normal !important;
   overflow-wrap: normal !important;
 }
-.full-risk-table tbody tr {
-  height: auto !important;
-}
-.full-risk-table tbody td {
-  height: auto !important;
-  vertical-align: top !important;
-}
+.full-risk-table tbody tr { height: 240px; }
 .control-cell,
 .responsables-cell,
 .full-risk-table td:last-child {
-  height: auto !important;
-  min-height: 0 !important;
-  max-height: none !important;
+  height: 240px !important;
+  min-height: 240px !important;
+  max-height: 240px !important;
 }
 .control-division,
 .responsables-division {
-  height: auto !important;
-  min-height: 28px !important;
-  max-height: none !important;
-  overflow: visible !important;
-  white-space: normal !important;
-  word-wrap: break-word !important;
-  overflow-wrap: anywhere !important;
-  align-items: flex-start !important;
+  height: 80px !important;
+  min-height: 80px !important;
+  max-height: 80px !important;
+  overflow: hidden !important;
+  align-items: center !important;
 }
 .action-buttons-container {
-  height: auto !important;
-  min-height: 72px;
-  padding: 6px !important;
-  flex-wrap: wrap;
+  height: 100% !important;
+  padding: 10px !important;
+  flex-wrap: nowrap;
 }
 /* Columnas de texto largo: no recortar */
 .full-risk-table td:nth-child(8),
@@ -7424,11 +7443,13 @@ body.modal-open .actions-menu-wrapper {
           >
             9. PLAN DE ACCIÓN
           </th>
-          <th
-            rowspan="2"
-            class="section-header"
-          >
+          <th rowspan="2" class="section-header" style="vertical-align:middle;text-align:center;">
             ACCIONES
+            <div class="bulk-actions-toolbar bulk-toolbar-risks" data-bulk-table="risks" style="display:none;">
+              <button type="button" class="bulk-tool-btn bulk-toggle-btn" title="Activar/desactivar selección" data-bulk-table="risks">✓</button>
+              <button type="button" class="bulk-tool-btn bulk-all-btn" title="Seleccionar / deseleccionar todos" data-bulk-table="risks" disabled>☑</button>
+              <button type="button" class="bulk-tool-btn bulk-delete-btn" title="Eliminar seleccionados" data-bulk-table="risks" disabled>×</button>
+            </div>
           </th>
         </tr>
 
@@ -8921,11 +8942,13 @@ body.modal-open .actions-menu-wrapper {
       10. REGISTRO DEL HISTÓRICO
     </th>
 
-    <th
-      rowspan="2"
-      class="section-header"
-    >
+    <th rowspan="2" class="section-header" style="vertical-align:middle;text-align:center;">
       ACCIONES
+            <div class="bulk-actions-toolbar bulk-toolbar-hist" data-bulk-table="hist" style="display:none;">
+              <button type="button" class="bulk-tool-btn bulk-toggle-btn" title="Activar/desactivar selección" data-bulk-table="hist">✓</button>
+              <button type="button" class="bulk-tool-btn bulk-all-btn" title="Seleccionar / deseleccionar todos" data-bulk-table="hist" disabled>☑</button>
+              <button type="button" class="bulk-tool-btn bulk-delete-btn" title="Eliminar seleccionados" data-bulk-table="hist" disabled>×</button>
+            </div>
     </th>
   </tr>
 
@@ -9484,8 +9507,13 @@ body.modal-open .actions-menu-wrapper {
             Severidad R.R.
             <button class="filter-btn" data-column="21">▼</button>
           </th>
-          <th class="subsection-header">
+          <th class="subsection-header" style="vertical-align:middle;text-align:center;">
             ACCIONES
+            <div class="bulk-actions-toolbar bulk-toolbar-loss" data-bulk-table="loss" style="display:none;">
+              <button type="button" class="bulk-tool-btn bulk-toggle-btn" title="Activar/desactivar selección" data-bulk-table="loss">✓</button>
+              <button type="button" class="bulk-tool-btn bulk-all-btn" title="Seleccionar / deseleccionar todos" data-bulk-table="loss" disabled>☑</button>
+              <button type="button" class="bulk-tool-btn bulk-delete-btn" title="Eliminar seleccionados" data-bulk-table="loss" disabled>×</button>
+            </div>
           </th>
         </tr>
       </thead>
@@ -10856,6 +10884,8 @@ function applyUserPermissions() {
   document.querySelectorAll('#riskTableBody .delete-btn').forEach(btn => {
     btn.style.display = canDelete ? '' : 'none';
   });
+  if (typeof updateBulkToolbarsVisibility === 'function') updateBulkToolbarsVisibility();
+
 
   // Botones de acción en eventos de pérdida
   document.querySelectorAll('.loss-event-edit-btn').forEach(btn => {
@@ -11921,6 +11951,8 @@ let lossEventsCurrentFilterDropdown = null;
 // 🔥 NUEVAS VARIABLES GLOBALES PARA CONTROL DE INICIALIZACIÓN
 let appInitialized = false;
 let isImporting = false;
+let isLoggedIn = false;
+let currentUser = null;
 
 const nivel2Options = {
   "Procesos": [
@@ -13808,8 +13840,8 @@ function loadLossEventsTable() {
             <td class="${coloresSeveridad[event.severidadRR] || ''}">${event.severidadRR || '-'}</td>
 <td>
     <div class="action-buttons-container" style="padding: 4px; gap: 12px;">
+        <div class="row-select-cb-wrap"><input type="checkbox" class="row-select-cb" data-bulk-table="loss" data-id="${event.id}"></div>
         <button class="action-btn edit-btn loss-event-edit-btn" data-id="${event.id}" style="padding: 12px 16px; font-size: 0.7rem; min-width: 50px; ${canEditData() ? '' : 'display:none'}">Editar</button>
-        <button class="action-btn delete-btn loss-event-delete-btn" data-id="${event.id}" style="padding: 12px 16px; font-size: 0.7rem; min-width: 50px; ${canDeleteData() ? '' : 'display:none'}">Eliminar</button>
     </div>
 </td>
         `;
@@ -14562,8 +14594,8 @@ function addHistoricalRowToTable(risk) {
     <td>${risk.modifiedBy || ''}</td>
     <td>
       <div class="action-buttons-container">
+        <div class="row-select-cb-wrap"><input type="checkbox" class="row-select-cb" data-bulk-table="hist" data-id="${risk.historyId}"></div>
         <button class="action-btn edit-btn historical-edit-btn" data-history-id="${risk.historyId}" style="${canEditData() ? '' : 'display:none'}">Editar</button>
-        <button class="action-btn delete-btn historical-delete-btn" data-history-id="${risk.historyId}" style="${canDeleteData() ? '' : 'display:none'}">Eliminar</button>
       </div>
     </td>
   `;
@@ -16638,8 +16670,8 @@ function addRiskRowToTable(risk) {
         <td>${risk.estatusPlanAccion || ''}</td>
 <td>
   <div class="action-buttons-container">
+    <div class="row-select-cb-wrap"><input type="checkbox" class="row-select-cb" data-bulk-table="risks" data-id="${risk.id}"></div>
     <button class="action-btn edit-btn" style="${canEditData() ? '' : 'display:none'}">Editar</button>
-    <button class="action-btn delete-btn" style="${canDeleteData() ? '' : 'display:none'}">Eliminar</button>
     <button class="action-btn event-btn" style="background-color: #f39c12; color: white; ${canEditData() ? '' : 'display:none'}">Evento</button>
   </div>
 </td>
@@ -20887,419 +20919,504 @@ async function exportLossEventsToExcel() {
 // =============================================
 // FUNCIONALIDAD DE EXPORTACIÓN/IMPORTACIÓN JSON
 // =============================================
+
+// =============================================
+// SELECCIÓN MÚLTIPLE (toolbar bajo ACCIONES)
+// =============================================
+const BULK_MODE_CLASS = { risks: 'bulk-mode-risks', loss: 'bulk-mode-loss', hist: 'bulk-mode-hist' };
+const BULK_SELECTED_CLASS = { risks: 'risk-row-selected', loss: 'loss-row-selected', hist: 'hist-row-selected' };
+const BULK_TBODY = { risks: 'riskTableBody', loss: 'lossEventsTableBody', hist: 'historicalTableBody' };
+
+function isBulkMode(table) {
+  return document.body.classList.contains(BULK_MODE_CLASS[table]);
+}
+function setBulkMode(table, on) {
+  const cls = BULK_MODE_CLASS[table];
+  if (on) document.body.classList.add(cls); else document.body.classList.remove(cls);
+  const toolbar = document.querySelector('.bulk-toolbar-' + table);
+  if (toolbar) {
+    const toggleBtn = toolbar.querySelector('.bulk-toggle-btn');
+    const allBtn = toolbar.querySelector('.bulk-all-btn');
+    const delBtn = toolbar.querySelector('.bulk-delete-btn');
+    if (toggleBtn) toggleBtn.classList.toggle('active', !!on);
+    if (allBtn) allBtn.disabled = !on;
+    if (delBtn) delBtn.disabled = !on;
+  }
+  if (!on) {
+    const tbody = document.getElementById(BULK_TBODY[table]);
+    if (tbody) {
+      tbody.querySelectorAll('.row-select-cb').forEach(function (cb) {
+        cb.checked = false;
+        const row = cb.closest('tr');
+        if (row) row.classList.remove(BULK_SELECTED_CLASS[table]);
+      });
+    }
+  }
+}
+function getBulkSelectedIds(table) {
+  const tbody = document.getElementById(BULK_TBODY[table]);
+  if (!tbody) return [];
+  const ids = [];
+  tbody.querySelectorAll('.row-select-cb:checked').forEach(function (cb) {
+    const id = parseInt(cb.getAttribute('data-id'), 10);
+    if (!isNaN(id)) ids.push(id);
+  });
+  return ids;
+}
+function bulkSelectAll(table) {
+  if (!isBulkMode(table)) return;
+  const tbody = document.getElementById(BULK_TBODY[table]);
+  if (!tbody) return;
+  const boxes = Array.from(tbody.querySelectorAll('tr')).filter(function (tr) {
+    return tr.style.display !== 'none' && !tr.querySelector('td[colspan]');
+  }).map(function (tr) { return tr.querySelector('.row-select-cb'); }).filter(Boolean);
+  const allChecked = boxes.length > 0 && boxes.every(function (cb) { return cb.checked; });
+  boxes.forEach(function (cb) {
+    cb.checked = !allChecked;
+    const row = cb.closest('tr');
+    if (row) {
+      if (cb.checked) row.classList.add(BULK_SELECTED_CLASS[table]);
+      else row.classList.remove(BULK_SELECTED_CLASS[table]);
+    }
+  });
+}
+async function bulkDeleteSelected(table) {
+  if (typeof canDeleteData === 'function' && !canDeleteData()) {
+    alert('No tiene permisos para eliminar. Solo Control Interno puede eliminar registros.');
+    return;
+  }
+  if (!isBulkMode(table)) { alert('Active primero el modo selección (botón ✓).'); return; }
+  const ids = getBulkSelectedIds(table);
+  if (ids.length === 0) { alert('No hay registros seleccionados.'); return; }
+  const label = table === 'risks' ? 'riesgo(s)' : (table === 'loss' ? 'evento(s) de pérdida' : 'registro(s) del histórico');
+  let ok = false;
+  try {
+    ok = typeof marcConfirm === 'function'
+      ? await marcConfirm('¿Eliminar ' + ids.length + ' ' + label + ' seleccionado(s)?\n\nEsta acción no se puede deshacer.',
+          { title: 'Eliminación múltiple', okText: 'Eliminar ' + ids.length, cancelText: 'Cancelar', danger: true })
+      : window.confirm('¿Eliminar ' + ids.length + ' ' + label + '?');
+  } catch (e) { ok = window.confirm('¿Eliminar ' + ids.length + ' ' + label + '?'); }
+  if (!ok) return;
+  const authorized = await requestSensitiveAuth('eliminar ' + ids.length + ' ' + label + ' seleccionados');
+  if (!authorized) return;
+  let deleted = 0;
+  if (table === 'risks') {
+    ids.slice().forEach(function (riskId) {
+      const idx = risks.findIndex(function (r) { return r.id === riskId; });
+      if (idx === -1) return;
+      try { if (typeof registerDeletedRiskInHistory === 'function') registerDeletedRiskInHistory(risks[idx]); } catch (e) {}
+      risks.splice(idx, 1); deleted++;
+    });
+    try { if (typeof sortRisksByKey === 'function') sortRisksByKey(); } catch (e) {}
+    try {
+      localStorage.setItem('marc_risks', JSON.stringify(risks));
+      localStorage.setItem('marc_historicalRisks', JSON.stringify(historicalRisks));
+      localStorage.setItem('marc_nextHistoricalId', String(nextHistoricalId));
+    } catch (e) {}
+    try { if (typeof saveRisksToLocalStorage === 'function') saveRisksToLocalStorage(); } catch (e) {}
+    try { if (typeof saveHistoricalToLocalStorage === 'function') saveHistoricalToLocalStorage(); } catch (e) {}
+    document.dispatchEvent(new CustomEvent('riskDeleted'));
+    try { if (typeof loadRisksTable === 'function') loadRisksTable(); } catch (e) {}
+    try { if (typeof loadHistoricalTable === 'function') loadHistoricalTable(); } catch (e) {}
+  } else if (table === 'loss') {
+    ids.slice().forEach(function (evId) {
+      const idx = lossEvents.findIndex(function (e) { return e.id === evId; });
+      if (idx === -1) return;
+      lossEvents.splice(idx, 1); deleted++;
+    });
+    try {
+      localStorage.setItem('marc_lossEvents', JSON.stringify(lossEvents));
+      localStorage.setItem('marc_nextLossEventId', String(nextLossEventId));
+    } catch (e) {}
+    try { if (typeof saveLossEventsToLocalStorage === 'function') saveLossEventsToLocalStorage(); } catch (e) {}
+    try { if (typeof loadLossEventsTable === 'function') loadLossEventsTable(); } catch (e) {}
+  } else if (table === 'hist') {
+    ids.slice().forEach(function (hid) {
+      const idx = historicalRisks.findIndex(function (h) { return h.historyId === hid; });
+      if (idx === -1) return;
+      historicalRisks.splice(idx, 1); deleted++;
+    });
+    try {
+      localStorage.setItem('marc_historicalRisks', JSON.stringify(historicalRisks));
+      localStorage.setItem('marc_nextHistoricalId', String(nextHistoricalId));
+    } catch (e) {}
+    try { if (typeof saveHistoricalToLocalStorage === 'function') saveHistoricalToLocalStorage(); } catch (e) {}
+    try { if (typeof loadHistoricalTable === 'function') loadHistoricalTable(); } catch (e) {}
+  }
+  try { if (typeof updateDynamicFilters === 'function') updateDynamicFilters(); } catch (e) {}
+  try { if (typeof updateStats === 'function') updateStats(); } catch (e) {}
+  try { if (typeof updateDashboard === 'function') updateDashboard(); } catch (e) {}
+  try { if (typeof applyUserPermissions === 'function') applyUserPermissions(); } catch (e) {}
+  setBulkMode(table, false);
+  updateBulkToolbarsVisibility();
+  alert('✅ Se eliminaron ' + deleted + ' ' + label + '.');
+}
+function updateBulkToolbarsVisibility() {
+  const canDelete = typeof canDeleteData === 'function' ? canDeleteData() : false;
+  document.querySelectorAll('.bulk-actions-toolbar').forEach(function (tb) {
+    tb.style.display = canDelete ? 'flex' : 'none';
+  });
+  if (!canDelete) {
+    setBulkMode('risks', false); setBulkMode('loss', false); setBulkMode('hist', false);
+  }
+}
+function setupBulkSelectionUI() {
+  if (!window._bulkToolbarBound) {
+    window._bulkToolbarBound = true;
+    document.addEventListener('click', function (e) {
+      const btn = e.target.closest('.bulk-tool-btn');
+      if (!btn) return;
+      e.preventDefault(); e.stopPropagation();
+      const table = btn.getAttribute('data-bulk-table');
+      if (!table) return;
+      if (typeof canDeleteData === 'function' && !canDeleteData()) {
+        alert('Solo Control Interno puede usar la eliminación múltiple.'); return;
+      }
+      if (btn.classList.contains('bulk-toggle-btn')) setBulkMode(table, !isBulkMode(table));
+      else if (btn.classList.contains('bulk-all-btn')) bulkSelectAll(table);
+      else if (btn.classList.contains('bulk-delete-btn')) bulkDeleteSelected(table);
+    });
+    document.addEventListener('change', function (e) {
+      if (!e.target || !e.target.classList.contains('row-select-cb')) return;
+      const table = e.target.getAttribute('data-bulk-table');
+      const row = e.target.closest('tr');
+      if (row && table) {
+        if (e.target.checked) row.classList.add(BULK_SELECTED_CLASS[table]);
+        else row.classList.remove(BULK_SELECTED_CLASS[table]);
+      }
+    });
+  }
+  updateBulkToolbarsVisibility();
+}
+document.addEventListener('DOMContentLoaded', function () { setupBulkSelectionUI(); });
+
+
+// === Binding robusto Exportar/Importar JSON ===
+(function bindJsonButtonsRobust() {
+  if (window._marcJsonBound) return;
+  window._marcJsonBound = true;
+  document.addEventListener('click', function (e) {
+    const exportBtn = e.target.closest('#exportJsonBtn');
+    if (exportBtn) {
+      e.preventDefault(); e.stopPropagation();
+      console.log('[JSON] click Exportar');
+      if (typeof exportToJson === 'function') exportToJson();
+      return;
+    }
+    const importBtn = e.target.closest('#importJsonBtn');
+    if (importBtn) {
+      e.preventDefault(); e.stopPropagation();
+      console.log('[JSON] click Importar');
+      let input = document.getElementById('jsonFileInput');
+      if (!input) {
+        input = document.createElement('input');
+        input.type = 'file'; input.accept = '.json,application/json';
+        input.id = 'jsonFileInput'; input.style.display = 'none';
+        document.body.appendChild(input);
+        input.addEventListener('change', function (ev) {
+          if (typeof importFromJson === 'function') importFromJson(ev);
+        });
+      }
+      input.value = '';
+      input.click();
+    }
+  }, true);
+  document.addEventListener('DOMContentLoaded', function () {
+    const input = document.getElementById('jsonFileInput');
+    if (input && !input.hasAttribute('data-json-bound-v2')) {
+      input.setAttribute('data-json-bound-v2', 'true');
+      input.addEventListener('change', function (ev) {
+        if (typeof importFromJson === 'function') importFromJson(ev);
+      });
+    }
+  });
+})();
+
 async function exportToJson() {
   try {
-    let risksToExport = [];
-    let exportType = 'todos';
-    let exportDescription = 'todos los registros';
-
-    const hasActiveFilters = Object.keys(activeFilters).length > 0;
-    const selectedUnit = document.getElementById('registerBusinessUnitFilter').value;
-    const hasUnitFilter = selectedUnit && selectedUnit !== 'Todos (CSW)';
-    const visibleRows = document.querySelectorAll('#riskTableBody tr.show');
-    const totalRows = document.querySelectorAll('#riskTableBody tr').length;
-
-    if (hasActiveFilters || hasUnitFilter) {
-      const userChoice = await marcConfirm(
-        'Se detectaron filtros activos.\n\n' +
-        'Actualmente se muestran ' + visibleRows.length + ' de ' + totalRows + ' registros.\n\n' +
-        '• Aceptar: exportar SOLO los ' + visibleRows.length + ' registros filtrados\n' +
-        '• Cancelar: exportar TODOS los ' + risks.length + ' registros',
-        {
-          title: 'Filtros activos',
-          icon: '📊',
-          okText: 'Solo filtrados',
-          cancelText: 'Todos'
-        }
-      );
-
-      if (userChoice) {
-        exportType = 'filtrados';
-        const visibleRiskIds = [];
-
-        visibleRows.forEach(row => {
-          const riskId = parseInt(row.dataset.riskId);
-          if (!isNaN(riskId)) visibleRiskIds.push(riskId);
-        });
-
-        risksToExport = risks.filter(risk => visibleRiskIds.includes(risk.id));
-        exportDescription = `registros filtrados (${risksToExport.length} de ${risks.length})`;
-
-        if (risksToExport.length === 0) {
-          risksToExport = risks;
-          exportType = 'todos';
-          exportDescription = 'todos los registros';
-          alert('No se encontraron registros filtrados. Se exportarán todos los registros.');
-        }
+    console.log('[exportToJson] Iniciando…');
+    const risksToExport = (typeof risks !== 'undefined' && Array.isArray(risks)) ? risks.slice() : [];
+    let credentialsExport = { 'Control Interno': '', 'Gestor': '', 'Auditor': '' };
+    try {
+      if (typeof VALID_CREDENTIALS !== 'undefined' && VALID_CREDENTIALS) {
+        credentialsExport = {
+          'Control Interno': VALID_CREDENTIALS['Control Interno'] || '',
+          'Gestor': VALID_CREDENTIALS['Gestor'] || '',
+          'Auditor': VALID_CREDENTIALS['Auditor'] || ''
+        };
       } else {
-        risksToExport = risks;
-        exportDescription = 'todos los registros';
+        const raw = localStorage.getItem('marc_credentials');
+        if (raw) credentialsExport = JSON.parse(raw);
       }
-    } else {
-      risksToExport = risks;
-      exportDescription = 'todos los registros';
-    }
-
+    } catch (e) {}
+    let sessionDurationExport = 10;
+    try {
+      if (typeof SESSION_DURATION_MINUTES === 'number' && SESSION_DURATION_MINUTES >= 1)
+        sessionDurationExport = SESSION_DURATION_MINUTES;
+      else {
+        const stored = parseInt(localStorage.getItem('marc_sessionDurationMinutes'), 10);
+        if (stored >= 1 && stored <= 480) sessionDurationExport = stored;
+      }
+    } catch (e) {}
+    const hist = (typeof historicalRisks !== 'undefined' && Array.isArray(historicalRisks)) ? historicalRisks.slice() : [];
+    const loss = (typeof lossEvents !== 'undefined' && Array.isArray(lossEvents)) ? lossEvents.slice() : [];
     const dataToExport = {
-      version: '2.1',
+      version: '2.2',
       exportDate: new Date().toISOString(),
-      exportType: exportType,
-      exportDescription: exportDescription,
-      filtersApplied: {
-        columnFilters: activeFilters,
-        unitFilter: hasUnitFilter ? selectedUnit : null
-      },
+      exportType: 'todos',
+      exportDescription: 'Respaldo completo del sistema',
       risks: risksToExport,
-      nextRiskId: nextRiskId,
-      historicalRisks: typeof historicalRisks !== 'undefined' ? historicalRisks : [],
-      nextHistoricalId: typeof nextHistoricalId !== 'undefined' ? nextHistoricalId : 1,
-      lossEvents: typeof lossEvents !== 'undefined' ? lossEvents : [],
-      nextLossEventId: typeof nextLossEventId !== 'undefined' ? nextLossEventId : 1,
+      nextRiskId: (typeof nextRiskId === 'number' ? nextRiskId : 1),
+      historicalRisks: hist,
+      nextHistoricalId: (typeof nextHistoricalId === 'number' ? nextHistoricalId : 1),
+      lossEvents: loss,
+      nextLossEventId: (typeof nextLossEventId === 'number' ? nextLossEventId : 1),
+      credentials: credentialsExport,
+      sessionDurationMinutes: sessionDurationExport,
+      darkMode: (typeof darkModeEnabled !== 'undefined') ? !!darkModeEnabled : false,
+      activeFilters: {},
+      currentUnitFilter: '',
       metadata: {
-        totalRisksInSystem: risks.length,
+        totalRisksInSystem: risksToExport.length,
         exportedRisks: risksToExport.length,
-        totalHistorical: typeof historicalRisks !== 'undefined' ? historicalRisks.length : 0,
-        totalLossEvents: typeof lossEvents !== 'undefined' ? lossEvents.length : 0,
-        businessUnits: [...new Set(risksToExport.map(r => r.businessUnit))],
-        lastUpdated: new Date().toLocaleString()
+        totalHistorical: hist.length,
+        totalLossEvents: loss.length,
+        includesCredentials: true,
+        includesSessionDuration: true,
+        businessUnits: [...new Set(risksToExport.map(function (r) { return r.businessUnit; }).filter(Boolean))],
+        lastUpdated: new Date().toLocaleString('es-MX')
       }
     };
-
     const jsonString = JSON.stringify(dataToExport, null, 2);
-
-    const fileName = exportType === 'filtrados'
-      ? `MARC_respaldo_filtrados_${visibleRows.length}de${risks.length}_${new Date().toISOString().split('T')[0]}.json`
-      : `MARC_respaldo_todos_${risks.length}_${new Date().toISOString().split('T')[0]}.json`;
-
-    if ('showSaveFilePicker' in window && window.isSecureContext) {
-      try {
-        const fileHandle = await window.showSaveFilePicker({
-          suggestedName: fileName,
-          types: [
-            {
-              description: 'Archivo JSON',
-              accept: {
-                'application/json': ['.json']
-              }
-            }
-          ]
-        });
-
-        const writable = await fileHandle.createWritable();
-        await writable.write(jsonString);
-        await writable.close();
-
-        alert(
-          `✅ EXPORTACIÓN JSON COMPLETADA\n\n` +
-          `• Tipo: ${exportType === 'filtrados' ? 'Registros filtrados' : 'Todos los registros'}\n` +
-          `• Exportados: ${risksToExport.length} ${exportDescription}\n` +
-          `• Histórico: ${(typeof historicalRisks !== 'undefined' ? historicalRisks.length : 0)} registros\n` +
-          `• Eventos de pérdida: ${(typeof lossEvents !== 'undefined' ? lossEvents.length : 0)}\n` +
-          `• Archivo: ${fileName}\n` +
-          `• Fecha: ${new Date().toLocaleString()}`
-        );
-        return;
-      } catch (saveError) {
-        if (saveError.name === 'AbortError') return;
-        throw saveError;
-      }
-    }
-
-    const blob = new Blob([jsonString], { type: 'application/json' });
+    const fileName = 'MARC_respaldo_completo_' + risksToExport.length + '_' + new Date().toISOString().split('T')[0] + '.json';
+    const blob = new Blob([jsonString], { type: 'application/json;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-
-    a.href = url;
-    a.download = fileName;
-
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    alert(
-      `✅ EXPORTACIÓN JSON COMPLETADA\n\n` +
-      `• Tipo: ${exportType === 'filtrados' ? 'Registros filtrados' : 'Todos los registros'}\n` +
-      `• Exportados: ${risksToExport.length} ${exportDescription}\n` +
-      `• Histórico: ${(typeof historicalRisks !== 'undefined' ? historicalRisks.length : 0)} registros\n` +
-      `• Eventos de pérdida: ${(typeof lossEvents !== 'undefined' ? lossEvents.length : 0)}\n` +
-      `• Archivo: ${fileName}\n` +
-      `• Fecha: ${new Date().toLocaleString()}`
-    );
+    a.href = url; a.download = fileName; a.style.display = 'none';
+    document.body.appendChild(a); a.click();
+    setTimeout(function () {
+      try { document.body.removeChild(a); } catch (e) {}
+      try { URL.revokeObjectURL(url); } catch (e) {}
+    }, 500);
+    alert('✅ EXPORTACIÓN JSON COMPLETA (v2.2)\n\n• Matriz: ' + risksToExport.length +
+      '\n• Histórico: ' + hist.length + '\n• Eventos de pérdida: ' + loss.length +
+      '\n• Contraseñas: Sí\n• Temporizador: ' + sessionDurationExport + ' min\n• Archivo: ' + fileName);
+    console.log('[exportToJson] OK', fileName);
   } catch (error) {
-    console.error('Error exportando a JSON:', error);
-    alert('❌ ERROR AL EXPORTAR DATOS:\n\n' + error.message);
+    console.error(error);
+    alert('❌ ERROR AL EXPORTAR:\n\n' + (error && error.message ? error.message : error));
   }
 }
 
 function importFromJson(event) {
   try {
-  if (!canEditData()) {
-    alert('No tiene permisos para registrar o editar. Solo consulta (Auditor).');
-    if (event && event.target) event.target.value = '';
-    return;
-  }
-  // Prevenir ejecuciones múltiples
-  if (isImporting) {
-    console.log('Importación en curso, ignorando...');
-    return;
-  }
-  
-  const file = event && event.target && event.target.files ? event.target.files[0] : null;
-  if (!file) return;
-  
-  isImporting = true;
-  console.log('Iniciando importación de:', file.name);
-
-  const reader = new FileReader();
-
-  reader.onload = async function (e) {
-    try {
-      const jsonData = JSON.parse(e.target.result);
-
-      if (!jsonData.risks || !Array.isArray(jsonData.risks)) {
-        throw new Error(
-          'El archivo no contiene datos válidos de riesgos.\nAsegúrese de que es un archivo exportado desde esta aplicación.'
-        );
-      }
-
-      const fileInfo =
-        `Archivo: ${file.name}\n` +
-        `Tamaño: ${(file.size / 1024).toFixed(2)} KB\n` +
-        `Registros en archivo: ${jsonData.risks.length}\n` +
-        `Fecha exportación: ${jsonData.exportDate || 'No disponible'}\n\n` +
-        `Registros actuales en sistema: ${risks.length}\n\n` +
-        `¿Desea importar estos datos?\n\n` +
-        `NOTA: Solo se importarán los registros nuevos (no duplicados).`;
-
-      const userAccepted = await marcConfirm(fileInfo, {
-        title: 'Importar JSON',
-        icon: '📁',
-        okText: 'Importar',
-        cancelText: 'Cancelar'
-      });
-      if (userAccepted) {
-        let nuevosRegistros = 0;
-        let duplicadosOmitidos = 0;
-
-        jsonData.risks.forEach(importedRisk => {
-          let existsById = false;
-
-          if (importedRisk.id) {
-            existsById = risks.some(existingRisk => existingRisk.id === importedRisk.id);
-          }
-
-          let existsByFolio = false;
-
-          if (importedRisk.folio) {
-            existsByFolio = risks.some(existingRisk => existingRisk.folio === importedRisk.folio);
-          }
-
-          let existsByDetails = false;
-
-          if (
-            importedRisk.folio &&
-            importedRisk.riskDescription &&
-            importedRisk.businessUnit
-          ) {
-            existsByDetails = risks.some(
-              existingRisk =>
-                existingRisk.folio === importedRisk.folio &&
-                existingRisk.businessUnit === importedRisk.businessUnit &&
-                existingRisk.riskDescription === importedRisk.riskDescription
-            );
-          }
-
-          if (existsById || existsByFolio || existsByDetails) {
-            duplicadosOmitidos++;
-          } else {
-            importedRisk.id = nextRiskId++;
-
-            if (!importedRisk.permanentCodes) {
-              importedRisk.permanentCodes = {
-                "COMA": "",
-                "Súper Willys": "",
-                "SurtiCOMA": ""
-              };
-            }
-
-            importedRisk = assignPermanentCodes(importedRisk);
-            risks.push(importedRisk);
-            nuevosRegistros++;
-          }
-        });
-
-        const importedIds = jsonData.risks.map(r => r.id || 0).filter(function (n) { return typeof n === 'number'; });
-        const maxImportedId = importedIds.length ? Math.max.apply(null, importedIds) : 0;
-
-        if (maxImportedId >= nextRiskId) {
-          nextRiskId = maxImportedId + 1;
-        }
-
-        // Importar histórico (incluye eliminados)
-        let histNuevos = 0;
-        let histDup = 0;
-        if (Array.isArray(jsonData.historicalRisks)) {
-          const existingHistIds = new Set(historicalRisks.map(h => h.historyId));
-          jsonData.historicalRisks.forEach(h => {
-            if (h.historyId && existingHistIds.has(h.historyId)) {
-              histDup++;
-              return;
-            }
-            if (typeof h.historyId !== 'number') {
-              h.historyId = nextHistoricalId++;
-            } else if (h.historyId >= nextHistoricalId) {
-              nextHistoricalId = h.historyId + 1;
-            }
-            historicalRisks.push(h);
-            existingHistIds.add(h.historyId);
-            histNuevos++;
-          });
-          if (typeof jsonData.nextHistoricalId === 'number' && jsonData.nextHistoricalId > nextHistoricalId) {
-            nextHistoricalId = jsonData.nextHistoricalId;
-          }
-          saveHistoricalToLocalStorage();
-        }
-
-        // Importar eventos de pérdida
-        let lossNuevos = 0;
-        let lossDup = 0;
-        if (Array.isArray(jsonData.lossEvents)) {
-          const existingLossIds = new Set(lossEvents.map(e => e.id));
-          jsonData.lossEvents.forEach(ev => {
-            if (ev.id && existingLossIds.has(ev.id)) {
-              lossDup++;
-              return;
-            }
-            if (typeof ev.id !== 'number') {
-              ev.id = nextLossEventId++;
-            } else if (ev.id >= nextLossEventId) {
-              nextLossEventId = ev.id + 1;
-            }
-            lossEvents.push(ev);
-            existingLossIds.add(ev.id);
-            lossNuevos++;
-          });
-          if (typeof jsonData.nextLossEventId === 'number' && jsonData.nextLossEventId > nextLossEventId) {
-            nextLossEventId = jsonData.nextLossEventId;
-          }
-          saveLossEventsToLocalStorage();
-        }
-
-        sortRisksByKey();
-        saveRisksToLocalStorage();
-        loadRisksTable();
-        loadHistoricalTable();
-        loadLossEventsTable();
-        refreshAllFilters();
-        updateSummaryView();
-        // Actualizar dashboard inmediatamente tras importar
-        try {
-          if (typeof updateDynamicFilters === 'function') updateDynamicFilters();
-          if (typeof updateDashboardAreaFilter === 'function') updateDashboardAreaFilter();
-          if (typeof destroyCharts === 'function') destroyCharts();
-          if (typeof updateDashboard === 'function') updateDashboard();
-          if (typeof updateLossEventsDashboard === 'function') updateLossEventsDashboard();
-          document.dispatchEvent(new CustomEvent('riskSaved'));
-        } catch (dashErr) {
-          console.error('Error actualizando dashboard tras importación:', dashErr);
-        }
-
-        const resumen =
-          `✅ Importación completada\n\n` +
-          `• Registros en archivo: ${jsonData.risks.length}\n` +
-          `• Nuevos registros agregados: ${nuevosRegistros}\n` +
-          `• Registros duplicados omitidos: ${duplicadosOmitidos}\n` +
-          `• Histórico nuevos: ${typeof histNuevos !== 'undefined' ? histNuevos : 0} (omitidos: ${typeof histDup !== 'undefined' ? histDup : 0})\n` +
-          `• Eventos de pérdida nuevos: ${typeof lossNuevos !== 'undefined' ? lossNuevos : 0} (omitidos: ${typeof lossDup !== 'undefined' ? lossDup : 0})\n`;
-
-        if (nuevosRegistros === 0) {
-          alert(
-            `ℹ️ No se agregaron nuevos registros\n\n` +
-            `Todos los ${jsonData.risks.length} registros ya existen en el sistema.\n` +
-            `Total de registros actuales: ${risks.length}`
-          );
-        } else {
-          alert(resumen + `\n• Total de registros actuales: ${risks.length}`);
-        }
-
-        console.log('Resumen de importación:', {
-          totalEnArchivo: jsonData.risks.length,
-          nuevos: nuevosRegistros,
-          duplicados: duplicadosOmitidos,
-          totalActual: risks.length
-        });
-      }
-    } catch (error) {
-      console.error('Error importando JSON:', error);
-      alert(
-        '❌ Error al importar archivo:\n\n' +
-        error.message +
-        '\n\nAsegúrese de seleccionar un archivo JSON válido exportado desde esta aplicación.'
-      );
-    } finally {
-      // Limpiar el input y liberar el flag
+    const file = event && event.target && event.target.files && event.target.files[0] ? event.target.files[0] : null;
+    if (!file) { alert('No se seleccionó ningún archivo.'); return; }
+    const reader = new FileReader();
+    reader.onerror = function () { alert('❌ Error al leer el archivo.'); };
+    reader.onload = function (ev) {
       try {
-        if (event && event.target) event.target.value = '';
-        const inp = document.getElementById('jsonFileInput');
-        if (inp) inp.value = '';
-      } catch (e) {}
-      isImporting = false;
-    }
-  };
-
-  reader.onerror = function () {
-    alert('❌ Error al leer el archivo. Asegúrese de que el archivo no esté corrupto.');
-    try {
-      if (event && event.target) event.target.value = '';
-      const inp = document.getElementById('jsonFileInput');
-      if (inp) inp.value = '';
-    } catch (e) {}
-    isImporting = false;
-  };
-
-  reader.readAsText(file);
-  } catch (outerErr) {
-    console.error('Error en importFromJson:', outerErr);
-    isImporting = false;
-    alert('Error al importar: ' + (outerErr && outerErr.message ? outerErr.message : outerErr));
+        const jsonData = JSON.parse(ev.target.result);
+        if (!jsonData || typeof jsonData !== 'object') { alert('JSON inválido.'); return; }
+        if (!Array.isArray(jsonData.risks)) {
+          if (Array.isArray(jsonData.matriz)) jsonData.risks = jsonData.matriz;
+          else if (Array.isArray(jsonData.data)) jsonData.risks = jsonData.data;
+          else jsonData.risks = [];
+        }
+        const nRisks = jsonData.risks.length;
+        const nHist = Array.isArray(jsonData.historicalRisks) ? jsonData.historicalRisks.length : 0;
+        const nLoss = Array.isArray(jsonData.lossEvents) ? jsonData.lossEvents.length : 0;
+        const hasCred = !!(jsonData.credentials && typeof jsonData.credentials === 'object');
+        const hasSession = typeof jsonData.sessionDurationMinutes === 'number';
+        let fullRestore = (typeof risks === 'undefined' || risks.length === 0);
+        if (!fullRestore) {
+          fullRestore = confirm(
+            'IMPORTAR JSON\n\nArchivo: ' + file.name +
+            '\n• Riesgos: ' + nRisks + '\n• Histórico: ' + nHist +
+            '\n• Eventos: ' + nLoss + '\n• Contraseñas: ' + (hasCred ? 'Sí' : 'No') +
+            '\n• Temporizador: ' + (hasSession ? jsonData.sessionDurationMinutes + ' min' : 'No') +
+            '\n\nAceptar = RESTAURAR TODO\nCancelar = Solo agregar nuevos'
+          );
+        }
+        let nuevos = 0, histN = 0, lossN = 0;
+        if (fullRestore) {
+          risks = jsonData.risks.map(function (r) { return r; });
+          if (typeof jsonData.nextRiskId === 'number' && jsonData.nextRiskId > 0) nextRiskId = jsonData.nextRiskId;
+          else { const ids = risks.map(function (r) { return r.id || 0; }); nextRiskId = (ids.length ? Math.max.apply(null, ids) : 0) + 1; }
+          nuevos = risks.length;
+          historicalRisks = Array.isArray(jsonData.historicalRisks) ? jsonData.historicalRisks.slice() : [];
+          histN = historicalRisks.length;
+          if (typeof jsonData.nextHistoricalId === 'number' && jsonData.nextHistoricalId > 0) nextHistoricalId = jsonData.nextHistoricalId;
+          else { const hids = historicalRisks.map(function (h) { return h.historyId || 0; }); nextHistoricalId = (hids.length ? Math.max.apply(null, hids) : 0) + 1; }
+          lossEvents = Array.isArray(jsonData.lossEvents) ? jsonData.lossEvents.slice() : [];
+          lossN = lossEvents.length;
+          if (typeof jsonData.nextLossEventId === 'number' && jsonData.nextLossEventId > 0) nextLossEventId = jsonData.nextLossEventId;
+          else { const lids = lossEvents.map(function (e) { return e.id || 0; }); nextLossEventId = (lids.length ? Math.max.apply(null, lids) : 0) + 1; }
+        } else {
+          const existingFolios = new Set(risks.map(function (r) { return r.folio; }));
+          jsonData.risks.forEach(function (r) {
+            if (r && r.folio && existingFolios.has(r.folio)) return;
+            if (!r.id) r.id = nextRiskId++;
+            else if (risks.some(function (x) { return x.id === r.id; })) r.id = nextRiskId++;
+            risks.push(r); if (r.folio) existingFolios.add(r.folio); nuevos++;
+          });
+          if (Array.isArray(jsonData.historicalRisks)) {
+            const existingH = new Set(historicalRisks.map(function (h) { return h.historyId; }));
+            jsonData.historicalRisks.forEach(function (h) {
+              if (h && existingH.has(h.historyId)) return;
+              if (!h.historyId) h.historyId = nextHistoricalId++;
+              historicalRisks.push(h); histN++;
+            });
+          }
+          if (Array.isArray(jsonData.lossEvents)) {
+            const existingL = new Set(lossEvents.map(function (e) { return e.id; }));
+            jsonData.lossEvents.forEach(function (e) {
+              if (e && existingL.has(e.id)) return;
+              if (!e.id) e.id = nextLossEventId++;
+              lossEvents.push(e); lossN++;
+            });
+          }
+        }
+        let credentialsRestored = false;
+        if (hasCred && confirm('¿Restaurar también las contraseñas de los perfiles?')) {
+          try {
+            VALID_CREDENTIALS['Control Interno'] = jsonData.credentials['Control Interno'] || VALID_CREDENTIALS['Control Interno'] || '';
+            VALID_CREDENTIALS['Gestor'] = jsonData.credentials['Gestor'] || VALID_CREDENTIALS['Gestor'] || '';
+            VALID_CREDENTIALS['Auditor'] = jsonData.credentials['Auditor'] || VALID_CREDENTIALS['Auditor'] || '';
+            localStorage.setItem('marc_credentials', JSON.stringify(VALID_CREDENTIALS));
+            if (typeof saveStoredCredentials === 'function') saveStoredCredentials();
+            credentialsRestored = true;
+          } catch (e) {}
+        }
+        let sessionRestored = false;
+        if (hasSession) {
+          const mins = parseInt(jsonData.sessionDurationMinutes, 10);
+          if (mins >= 1 && mins <= 480) {
+            try {
+              SESSION_DURATION_MINUTES = mins;
+              localStorage.setItem('marc_sessionDurationMinutes', String(mins));
+              sessionRestored = true;
+            } catch (e) {}
+          }
+        }
+        if (typeof jsonData.darkMode === 'boolean') {
+          try {
+            darkModeEnabled = jsonData.darkMode;
+            localStorage.setItem('marc_darkMode', String(darkModeEnabled));
+            if (darkModeEnabled) document.body.classList.add('dark-mode');
+            else document.body.classList.remove('dark-mode');
+          } catch (e) {}
+        }
+        try {
+          localStorage.setItem('marc_risks', JSON.stringify(risks));
+          localStorage.setItem('marc_nextRiskId', String(nextRiskId));
+          localStorage.setItem('marc_historicalRisks', JSON.stringify(historicalRisks));
+          localStorage.setItem('marc_nextHistoricalId', String(nextHistoricalId));
+          localStorage.setItem('marc_lossEvents', JSON.stringify(lossEvents));
+          localStorage.setItem('marc_nextLossEventId', String(nextLossEventId));
+        } catch (e) { alert('Advertencia localStorage: ' + e.message); }
+        try { if (typeof sortRisksByKey === 'function') sortRisksByKey(); } catch (e) {}
+        try { if (typeof saveRisksToLocalStorage === 'function') saveRisksToLocalStorage(); } catch (e) {}
+        try { if (typeof saveHistoricalToLocalStorage === 'function') saveHistoricalToLocalStorage(); } catch (e) {}
+        try { if (typeof saveLossEventsToLocalStorage === 'function') saveLossEventsToLocalStorage(); } catch (e) {}
+        try { if (typeof switchSection === 'function') switchSection('register'); } catch (e) {}
+        try { if (typeof loadRisksTable === 'function') loadRisksTable(); } catch (e) {}
+        try { if (typeof loadHistoricalTable === 'function') loadHistoricalTable(); } catch (e) {}
+        try { if (typeof loadLossEventsTable === 'function') loadLossEventsTable(); } catch (e) {}
+        try { if (typeof updateStats === 'function') updateStats(); } catch (e) {}
+        try { if (typeof updateDynamicFilters === 'function') updateDynamicFilters(); } catch (e) {}
+        try { if (typeof updateDashboard === 'function') updateDashboard(); } catch (e) {}
+        try { if (typeof applyUserPermissions === 'function') applyUserPermissions(); } catch (e) {}
+        try { if (typeof updateBulkToolbarsVisibility === 'function') updateBulkToolbarsVisibility(); } catch (e) {}
+        try {
+          document.querySelectorAll('#riskTableBody tr').forEach(function (row) {
+            row.classList.add('show'); row.style.display = 'table-row';
+          });
+        } catch (e) {}
+        alert('✅ IMPORTACIÓN COMPLETADA\n\nModo: ' + (fullRestore ? 'Restauración total' : 'Solo nuevos') +
+          '\n• Riesgos: ' + risks.length + ' (+' + nuevos + ')\n• Histórico: ' + historicalRisks.length +
+          ' (+' + histN + ')\n• Eventos: ' + lossEvents.length + ' (+' + lossN + ')\n• Contraseñas: ' +
+          (credentialsRestored ? 'Restauradas' : 'Sin cambio') + '\n• Temporizador: ' +
+          (sessionRestored ? jsonData.sessionDurationMinutes + ' min' : 'Sin cambio'));
+      } catch (err) {
+        console.error(err);
+        alert('❌ Error al importar:\n\n' + (err && err.message ? err.message : err));
+      } finally {
+        try {
+          if (event && event.target) event.target.value = '';
+          const inp = document.getElementById('jsonFileInput');
+          if (inp) inp.value = '';
+        } catch (e) {}
+      }
+    };
+    reader.readAsText(file, 'UTF-8');
+  } catch (outer) {
+    alert('❌ Error: ' + (outer && outer.message ? outer.message : outer));
   }
 }
+
 
 function autoBackup() {
   if (risks.length === 0) return;
 
   const today = new Date().toISOString().split('T')[0];
-  const backupKey = `marc_backup_${today}`;
+  const backupKey = 'marc_backup_' + today;
+
+  let credentialsBackup = null;
+  try {
+    if (typeof VALID_CREDENTIALS !== 'undefined' && VALID_CREDENTIALS) {
+      credentialsBackup = {
+        'Control Interno': VALID_CREDENTIALS['Control Interno'] || '',
+        'Gestor': VALID_CREDENTIALS['Gestor'] || '',
+        'Auditor': VALID_CREDENTIALS['Auditor'] || ''
+      };
+    }
+  } catch (e) {}
+
+  let sessionMins = 10;
+  try {
+    if (typeof SESSION_DURATION_MINUTES === 'number' && SESSION_DURATION_MINUTES >= 1) {
+      sessionMins = SESSION_DURATION_MINUTES;
+    }
+  } catch (e) {}
 
   const backupData = {
-    version: '2.0',
+    version: '2.2',
     backupDate: new Date().toISOString(),
     risks: risks,
     nextRiskId: nextRiskId,
+    historicalRisks: typeof historicalRisks !== 'undefined' ? historicalRisks : [],
+    nextHistoricalId: typeof nextHistoricalId !== 'undefined' ? nextHistoricalId : 1,
+    lossEvents: typeof lossEvents !== 'undefined' ? lossEvents : [],
+    nextLossEventId: typeof nextLossEventId !== 'undefined' ? nextLossEventId : 1,
+    credentials: credentialsBackup,
+    sessionDurationMinutes: sessionMins,
+    darkMode: typeof darkModeEnabled !== 'undefined' ? !!darkModeEnabled : false,
     metadata: {
       totalRisks: risks.length,
-      businessUnits: [...new Set(risks.map(r => r.businessUnit))]
+      totalHistorical: typeof historicalRisks !== 'undefined' ? historicalRisks.length : 0,
+      totalLossEvents: typeof lossEvents !== 'undefined' ? lossEvents.length : 0,
+      businessUnits: [...new Set(risks.map(function (r) { return r.businessUnit; }).filter(Boolean))]
     }
   };
 
-  localStorage.setItem(backupKey, JSON.stringify(backupData));
+  try {
+    localStorage.setItem(backupKey, JSON.stringify(backupData));
+  } catch (e) {
+    console.error('Error en autoBackup:', e);
+  }
 
-  const backupKeys = Object.keys(localStorage).filter(key =>
-    key.startsWith('marc_backup_')
-  );
+  const backupKeys = Object.keys(localStorage).filter(function (key) {
+    return key.startsWith('marc_backup_');
+  });
 
   if (backupKeys.length > 5) {
     backupKeys.sort();
-
     for (let i = 0; i < backupKeys.length - 5; i++) {
       localStorage.removeItem(backupKeys[i]);
     }
   }
 }
-
-
-
 
 
 // =============================================
