@@ -21277,119 +21277,209 @@ async function exportToJson() {
 
 function importFromJson(event) {
   try {
+    // Evitar doble disparo si hay varios listeners sobre el mismo input
+    if (window._marcImporting) {
+      console.warn('[importFromJson] Importación ya en curso, se ignora este evento.');
+      return;
+    }
     const file = event && event.target && event.target.files && event.target.files[0] ? event.target.files[0] : null;
     if (!file) { alert('No se seleccionó ningún archivo.'); return; }
+    window._marcImporting = true;
     const reader = new FileReader();
-    reader.onerror = function () { alert('❌ Error al leer el archivo.'); };
-    reader.onload = function (ev) {
+    reader.onerror = function () {
+      window._marcImporting = false;
+      alert('❌ Error al leer el archivo.');
+    };
+    reader.onload = async function (ev) {
       try {
         const jsonData = JSON.parse(ev.target.result);
         if (!jsonData || typeof jsonData !== 'object') { alert('JSON inválido.'); return; }
+
+        // Normalizar array de riesgos (compatibilidad con formatos antiguos)
         if (!Array.isArray(jsonData.risks)) {
           if (Array.isArray(jsonData.matriz)) jsonData.risks = jsonData.matriz;
           else if (Array.isArray(jsonData.data)) jsonData.risks = jsonData.data;
           else jsonData.risks = [];
         }
+        if (!Array.isArray(jsonData.historicalRisks)) jsonData.historicalRisks = [];
+        if (!Array.isArray(jsonData.lossEvents)) jsonData.lossEvents = [];
+
         const nRisks = jsonData.risks.length;
-        const nHist = Array.isArray(jsonData.historicalRisks) ? jsonData.historicalRisks.length : 0;
-        const nLoss = Array.isArray(jsonData.lossEvents) ? jsonData.lossEvents.length : 0;
+        const nHist = jsonData.historicalRisks.length;
+        const nLoss = jsonData.lossEvents.length;
         const hasCred = !!(jsonData.credentials && typeof jsonData.credentials === 'object');
-        const hasSession = typeof jsonData.sessionDurationMinutes === 'number';
-        let fullRestore = (typeof risks === 'undefined' || risks.length === 0);
-        if (!fullRestore) {
-          fullRestore = confirm(
-            'IMPORTAR JSON\n\nArchivo: ' + file.name +
-            '\n• Riesgos: ' + nRisks + '\n• Histórico: ' + nHist +
-            '\n• Eventos: ' + nLoss + '\n• Contraseñas: ' + (hasCred ? 'Sí' : 'No') +
-            '\n• Temporizador: ' + (hasSession ? jsonData.sessionDurationMinutes + ' min' : 'No') +
-            '\n\nAceptar = RESTAURAR TODO\nCancelar = Solo agregar nuevos'
-          );
+
+        // Aceptar número o string para duración de sesión
+        let sessionMinsParsed = null;
+        if (jsonData.sessionDurationMinutes !== undefined && jsonData.sessionDurationMinutes !== null && jsonData.sessionDurationMinutes !== '') {
+          const sm = parseInt(jsonData.sessionDurationMinutes, 10);
+          if (!isNaN(sm) && sm >= 1 && sm <= 480) sessionMinsParsed = sm;
         }
+        const hasSession = sessionMinsParsed !== null;
+
+        // Aceptar boolean o string para darkMode
+        let darkModeParsed = null;
+        if (typeof jsonData.darkMode === 'boolean') {
+          darkModeParsed = jsonData.darkMode;
+        } else if (typeof jsonData.darkMode === 'string') {
+          const d = jsonData.darkMode.toLowerCase().trim();
+          if (d === 'true' || d === '1') darkModeParsed = true;
+          else if (d === 'false' || d === '0') darkModeParsed = false;
+        }
+
+        // --- Diálogo 1: modo de importación (solo si ya hay datos) ---
+        let fullRestore = (typeof risks === 'undefined' || !Array.isArray(risks) || risks.length === 0);
+        if (!fullRestore) {
+          const confirmFn = (typeof marcConfirm === 'function') ? marcConfirm : null;
+          if (confirmFn) {
+            fullRestore = await confirmFn(
+              'Archivo: ' + file.name +
+              '\n• Riesgos: ' + nRisks +
+              '\n• Histórico: ' + nHist +
+              '\n• Eventos: ' + nLoss +
+              '\n• Contraseñas: ' + (hasCred ? 'Sí' : 'No') +
+              '\n• Temporizador: ' + (hasSession ? sessionMinsParsed + ' min' : 'No') +
+              (darkModeParsed !== null ? ('\n• Modo oscuro: ' + (darkModeParsed ? 'Sí' : 'No')) : '') +
+              '\n\nAceptar = RESTAURAR TODO\nCancelar = Solo agregar nuevos',
+              { title: 'Importar JSON', okText: 'Restaurar todo', cancelText: 'Solo agregar nuevos' }
+            );
+          } else {
+            fullRestore = window.confirm(
+              'IMPORTAR JSON\n\nArchivo: ' + file.name +
+              '\n• Riesgos: ' + nRisks + '\n• Histórico: ' + nHist +
+              '\n• Eventos: ' + nLoss + '\n• Contraseñas: ' + (hasCred ? 'Sí' : 'No') +
+              '\n• Temporizador: ' + (hasSession ? sessionMinsParsed + ' min' : 'No') +
+              '\n\nAceptar = RESTAURAR TODO\nCancelar = Solo agregar nuevos'
+            );
+          }
+        }
+
         let nuevos = 0, histN = 0, lossN = 0;
+
         if (fullRestore) {
           risks = jsonData.risks.map(function (r) { return r; });
           if (typeof jsonData.nextRiskId === 'number' && jsonData.nextRiskId > 0) nextRiskId = jsonData.nextRiskId;
-          else { const ids = risks.map(function (r) { return r.id || 0; }); nextRiskId = (ids.length ? Math.max.apply(null, ids) : 0) + 1; }
+          else {
+            const ids = risks.map(function (r) { return r.id || 0; });
+            nextRiskId = (ids.length ? Math.max.apply(null, ids) : 0) + 1;
+          }
           nuevos = risks.length;
-          historicalRisks = Array.isArray(jsonData.historicalRisks) ? jsonData.historicalRisks.slice() : [];
+
+          historicalRisks = jsonData.historicalRisks.slice();
           histN = historicalRisks.length;
           if (typeof jsonData.nextHistoricalId === 'number' && jsonData.nextHistoricalId > 0) nextHistoricalId = jsonData.nextHistoricalId;
-          else { const hids = historicalRisks.map(function (h) { return h.historyId || 0; }); nextHistoricalId = (hids.length ? Math.max.apply(null, hids) : 0) + 1; }
-          lossEvents = Array.isArray(jsonData.lossEvents) ? jsonData.lossEvents.slice() : [];
+          else {
+            const hids = historicalRisks.map(function (h) { return h.historyId || 0; });
+            nextHistoricalId = (hids.length ? Math.max.apply(null, hids) : 0) + 1;
+          }
+
+          lossEvents = jsonData.lossEvents.slice();
           lossN = lossEvents.length;
           if (typeof jsonData.nextLossEventId === 'number' && jsonData.nextLossEventId > 0) nextLossEventId = jsonData.nextLossEventId;
-          else { const lids = lossEvents.map(function (e) { return e.id || 0; }); nextLossEventId = (lids.length ? Math.max.apply(null, lids) : 0) + 1; }
+          else {
+            const lids = lossEvents.map(function (e) { return e.id || 0; });
+            nextLossEventId = (lids.length ? Math.max.apply(null, lids) : 0) + 1;
+          }
         } else {
           const existingFolios = new Set(risks.map(function (r) { return r.folio; }));
           jsonData.risks.forEach(function (r) {
-            if (r && r.folio && existingFolios.has(r.folio)) return;
+            if (!r) return;
+            if (r.folio && existingFolios.has(r.folio)) return;
             if (!r.id) r.id = nextRiskId++;
             else if (risks.some(function (x) { return x.id === r.id; })) r.id = nextRiskId++;
-            risks.push(r); if (r.folio) existingFolios.add(r.folio); nuevos++;
+            risks.push(r);
+            if (r.folio) existingFolios.add(r.folio);
+            nuevos++;
           });
-          if (Array.isArray(jsonData.historicalRisks)) {
-            const existingH = new Set(historicalRisks.map(function (h) { return h.historyId; }));
-            jsonData.historicalRisks.forEach(function (h) {
-              if (h && existingH.has(h.historyId)) return;
-              if (!h.historyId) h.historyId = nextHistoricalId++;
-              historicalRisks.push(h); histN++;
-            });
-          }
-          if (Array.isArray(jsonData.lossEvents)) {
-            const existingL = new Set(lossEvents.map(function (e) { return e.id; }));
-            jsonData.lossEvents.forEach(function (e) {
-              if (e && existingL.has(e.id)) return;
-              if (!e.id) e.id = nextLossEventId++;
-              lossEvents.push(e); lossN++;
-            });
-          }
+          const existingH = new Set(historicalRisks.map(function (h) { return h.historyId; }));
+          jsonData.historicalRisks.forEach(function (h) {
+            if (!h) return;
+            if (h.historyId && existingH.has(h.historyId)) return;
+            if (!h.historyId) h.historyId = nextHistoricalId++;
+            historicalRisks.push(h);
+            histN++;
+          });
+          const existingL = new Set(lossEvents.map(function (e) { return e.id; }));
+          jsonData.lossEvents.forEach(function (e) {
+            if (!e) return;
+            if (e.id && existingL.has(e.id)) return;
+            if (!e.id) e.id = nextLossEventId++;
+            lossEvents.push(e);
+            lossN++;
+          });
         }
+
+        // --- Diálogo 2: restaurar contraseñas ---
         let credentialsRestored = false;
-        if (hasCred && confirm('¿Restaurar también las contraseñas de los perfiles?')) {
-          try {
-            VALID_CREDENTIALS['Control Interno'] = jsonData.credentials['Control Interno'] || VALID_CREDENTIALS['Control Interno'] || '';
-            VALID_CREDENTIALS['Gestor'] = jsonData.credentials['Gestor'] || VALID_CREDENTIALS['Gestor'] || '';
-            VALID_CREDENTIALS['Auditor'] = jsonData.credentials['Auditor'] || VALID_CREDENTIALS['Auditor'] || '';
-            localStorage.setItem('marc_credentials', JSON.stringify(VALID_CREDENTIALS));
-            if (typeof saveStoredCredentials === 'function') saveStoredCredentials();
-            credentialsRestored = true;
-          } catch (e) {}
-        }
-        let sessionRestored = false;
-        if (hasSession) {
-          const mins = parseInt(jsonData.sessionDurationMinutes, 10);
-          if (mins >= 1 && mins <= 480) {
+        if (hasCred) {
+          let restoreCreds = false;
+          if (typeof marcConfirm === 'function') {
+            restoreCreds = await marcConfirm(
+              '¿Restaurar también las contraseñas de los perfiles?',
+              { title: 'Restaurar contraseñas', okText: 'Restaurar', cancelText: 'No restaurar', danger: true }
+            );
+          } else {
+            restoreCreds = window.confirm('¿Restaurar también las contraseñas de los perfiles?');
+          }
+          if (restoreCreds) {
             try {
-              SESSION_DURATION_MINUTES = mins;
-              localStorage.setItem('marc_sessionDurationMinutes', String(mins));
-              try {
-                var _si = document.getElementById('sessionDurationInput');
-                if (_si) _si.value = String(mins);
-                if (typeof updateSessionTimerUI === 'function') updateSessionTimerUI();
-              } catch (e2) {}
-              sessionRestored = true;
-            } catch (e) {}
+              if (typeof VALID_CREDENTIALS === 'undefined') {
+                window.VALID_CREDENTIALS = { 'Control Interno': '', 'Gestor': '', 'Auditor': '' };
+              }
+              VALID_CREDENTIALS['Control Interno'] = jsonData.credentials['Control Interno'] || VALID_CREDENTIALS['Control Interno'] || '';
+              VALID_CREDENTIALS['Gestor'] = jsonData.credentials['Gestor'] || VALID_CREDENTIALS['Gestor'] || '';
+              VALID_CREDENTIALS['Auditor'] = jsonData.credentials['Auditor'] || VALID_CREDENTIALS['Auditor'] || '';
+              localStorage.setItem('marc_credentials', JSON.stringify(VALID_CREDENTIALS));
+              if (typeof saveStoredCredentials === 'function') saveStoredCredentials();
+              credentialsRestored = true;
+            } catch (e) { console.error('Error restaurando contraseñas:', e); }
           }
         }
-        if (typeof jsonData.darkMode === 'boolean') {
+
+        // --- Temporizador de sesión ---
+        let sessionRestored = false;
+        if (hasSession && sessionMinsParsed !== null) {
           try {
-            darkModeEnabled = jsonData.darkMode;
-            localStorage.setItem('marc_darkMode', String(darkModeEnabled));
-            if (darkModeEnabled) {
-              document.body.classList.add('dark-mode');
-              try {
+            // Límite UI configurador es 1-120; aceptar hasta 480 en JSON pero clamp a 120 para el timer activo
+            const minsForTimer = Math.min(120, Math.max(1, sessionMinsParsed));
+            if (typeof setSessionDurationMinutes === 'function') {
+              setSessionDurationMinutes(minsForTimer);
+            } else {
+              SESSION_DURATION_MINUTES = minsForTimer;
+              localStorage.setItem('marc_sessionDurationMinutes', String(minsForTimer));
+            }
+            var _si = document.getElementById('sessionDurationInput');
+            if (_si) _si.value = String(minsForTimer);
+            if (typeof noteSessionActivity === 'function') noteSessionActivity();
+            if (typeof updateSessionTimerUI === 'function') updateSessionTimerUI();
+            sessionRestored = true;
+          } catch (e) { console.error('Error restaurando temporizador:', e); }
+        }
+
+        // --- Modo oscuro ---
+        if (darkModeParsed !== null) {
+          try {
+            darkModeEnabled = darkModeParsed;
+            localStorage.setItem('marc_darkMode', darkModeParsed ? 'true' : 'false');
+            if (darkModeParsed) {
+              if (typeof applyDarkMode === 'function') applyDarkMode();
+              else {
+                document.body.classList.add('dark-mode');
                 var _tt = document.getElementById('themeToggle');
                 if (_tt) _tt.innerHTML = '<span>☀️</span> Modo Claro';
-              } catch (e2) {}
+              }
             } else {
-              document.body.classList.remove('dark-mode');
-              try {
+              if (typeof removeDarkMode === 'function') removeDarkMode();
+              else {
+                document.body.classList.remove('dark-mode');
                 var _tt2 = document.getElementById('themeToggle');
                 if (_tt2) _tt2.innerHTML = '<span>🌙</span> Modo Oscuro';
-              } catch (e2) {}
+              }
             }
-          } catch (e) {}
+          } catch (e) { console.error('Error aplicando modo oscuro:', e); }
         }
+
+        // --- Persistir datos ---
         try {
           localStorage.setItem('marc_risks', JSON.stringify(risks));
           localStorage.setItem('marc_nextRiskId', String(nextRiskId));
@@ -21398,43 +21488,70 @@ function importFromJson(event) {
           localStorage.setItem('marc_lossEvents', JSON.stringify(lossEvents));
           localStorage.setItem('marc_nextLossEventId', String(nextLossEventId));
         } catch (e) { alert('Advertencia localStorage: ' + e.message); }
+
         try { if (typeof sortRisksByKey === 'function') sortRisksByKey(); } catch (e) {}
         try { if (typeof saveRisksToLocalStorage === 'function') saveRisksToLocalStorage(); } catch (e) {}
         try { if (typeof saveHistoricalToLocalStorage === 'function') saveHistoricalToLocalStorage(); } catch (e) {}
         try { if (typeof saveLossEventsToLocalStorage === 'function') saveLossEventsToLocalStorage(); } catch (e) {}
+
+        // Limpiar filtros para que se vean todos los registros importados
+        try {
+          if (typeof activeFilters !== 'undefined') activeFilters = {};
+          if (typeof currentUnitFilter !== 'undefined') currentUnitFilter = null;
+          var unitSel = document.getElementById('registerBusinessUnitFilter');
+          if (unitSel) unitSel.value = 'Todos (CSW)';
+          var clearUnitBtn = document.getElementById('clearUnitFilterBtn');
+          if (clearUnitBtn) clearUnitBtn.style.display = 'none';
+          var recodedInfo = document.getElementById('recodedInfo');
+          if (recodedInfo) recodedInfo.style.display = 'none';
+        } catch (e) {}
+
+        // --- Refrescar UI (sin recargar la página) ---
         try { if (typeof switchSection === 'function') switchSection('register'); } catch (e) {}
-        try { if (typeof loadRisksTable === 'function') loadRisksTable(); } catch (e) {}
-        try { if (typeof loadHistoricalTable === 'function') loadHistoricalTable(); } catch (e) {}
-        try { if (typeof loadLossEventsTable === 'function') loadLossEventsTable(); } catch (e) {}
+        try { if (typeof loadRisksTable === 'function') loadRisksTable(); } catch (e) { console.error('loadRisksTable', e); }
+        try { if (typeof loadHistoricalTable === 'function') loadHistoricalTable(); } catch (e) { console.error('loadHistoricalTable', e); }
+        try { if (typeof loadLossEventsTable === 'function') loadLossEventsTable(); } catch (e) { console.error('loadLossEventsTable', e); }
         try { if (typeof updateStats === 'function') updateStats(); } catch (e) {}
         try { if (typeof updateDynamicFilters === 'function') updateDynamicFilters(); } catch (e) {}
         try { if (typeof updateDashboard === 'function') updateDashboard(); } catch (e) {}
         try { if (typeof applyUserPermissions === 'function') applyUserPermissions(); } catch (e) {}
         try { if (typeof updateBulkToolbarsVisibility === 'function') updateBulkToolbarsVisibility(); } catch (e) {}
-        try {
-          document.querySelectorAll('#riskTableBody tr').forEach(function (row) {
-            row.classList.add('show'); row.style.display = 'table-row';
-          });
-        } catch (e) {}
-        try {
-          document.querySelectorAll('#historicalTableBody tr').forEach(function (row) {
-            row.style.display = 'table-row';
-          });
-        } catch (e) {}
-        try {
-          document.querySelectorAll('#lossEventsTableBody tr').forEach(function (row) {
-            row.style.display = 'table-row';
-          });
-        } catch (e) {}
-        alert('✅ IMPORTACIÓN COMPLETADA\n\nModo: ' + (fullRestore ? 'Restauración total' : 'Solo nuevos') +
-          '\n• Riesgos: ' + risks.length + ' (+' + nuevos + ')\n• Histórico: ' + historicalRisks.length +
-          ' (+' + histN + ')\n• Eventos: ' + lossEvents.length + ' (+' + lossN + ')\n• Contraseñas: ' +
-          (credentialsRestored ? 'Restauradas' : 'Sin cambio') + '\n• Temporizador: ' +
-          (sessionRestored ? jsonData.sessionDurationMinutes + ' min' : 'Sin cambio'));
+        try { if (typeof updateHistoricalBusinessUnitFilter === 'function') updateHistoricalBusinessUnitFilter(); } catch (e) {}
+
+        // Forzar visibilidad de filas
+        setTimeout(function () {
+          try {
+            document.querySelectorAll('#riskTableBody tr').forEach(function (row) {
+              row.classList.add('show');
+              row.classList.remove('filtered-row');
+              row.style.display = 'table-row';
+            });
+            document.querySelectorAll('#historicalTableBody tr').forEach(function (row) {
+              row.style.display = 'table-row';
+            });
+            document.querySelectorAll('#lossEventsTableBody tr').forEach(function (row) {
+              row.style.display = 'table-row';
+            });
+            if (typeof sortVisibleRowsByKey === 'function') sortVisibleRowsByKey();
+            if (typeof updateRegisterFilterInfo === 'function') updateRegisterFilterInfo();
+            if (typeof updateStats === 'function') updateStats();
+          } catch (e) { console.error('post-import UI', e); }
+        }, 250);
+
+        alert(
+          '✅ IMPORTACIÓN COMPLETADA\n\nModo: ' + (fullRestore ? 'Restauración total' : 'Solo nuevos') +
+          '\n• Riesgos: ' + risks.length + ' (+' + nuevos + ')' +
+          '\n• Histórico: ' + historicalRisks.length + ' (+' + histN + ')' +
+          '\n• Eventos: ' + lossEvents.length + ' (+' + lossN + ')' +
+          '\n• Contraseñas: ' + (credentialsRestored ? 'Restauradas' : 'Sin cambio') +
+          '\n• Temporizador: ' + (sessionRestored ? sessionMinsParsed + ' min' : 'Sin cambio') +
+          '\n• Modo oscuro: ' + (darkModeParsed === null ? 'Sin cambio' : (darkModeParsed ? 'Activado' : 'Desactivado'))
+        );
       } catch (err) {
         console.error(err);
         alert('❌ Error al importar:\n\n' + (err && err.message ? err.message : err));
       } finally {
+        window._marcImporting = false;
         try {
           if (event && event.target) event.target.value = '';
           const inp = document.getElementById('jsonFileInput');
@@ -21444,6 +21561,7 @@ function importFromJson(event) {
     };
     reader.readAsText(file, 'UTF-8');
   } catch (outer) {
+    window._marcImporting = false;
     alert('❌ Error: ' + (outer && outer.message ? outer.message : outer));
   }
 }
